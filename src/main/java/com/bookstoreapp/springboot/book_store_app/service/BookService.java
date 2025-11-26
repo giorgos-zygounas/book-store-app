@@ -8,8 +8,8 @@ import org.mapstruct.MappingTarget;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
-import static java.util.stream.Collectors.toList;
 
 @Service
 public class BookService {
@@ -23,7 +23,7 @@ public class BookService {
         this.bookRepository = booksRepository;
         this.bookMapper = bookMapper;
     }
-//ετσι η με stream
+
     public List<BookDTO> getBooks(){
 
         var result = bookRepository.findAll()
@@ -36,8 +36,9 @@ public class BookService {
     public BookDTO getBookById(Long id){
         return bookRepository.findById(id)
                 .map(bookMapper::toDTO)
-                .orElse(new BookDTO());
+                .orElseThrow(()-> new NoSuchElementException("Book with id " + id + " not found"));
     }
+
     //create update
     public BookDTO createBook(BookDTO bookDTO)
     {
@@ -45,7 +46,7 @@ public class BookService {
         Book book = bookRepository.save(bookMapper.toEntity(bookDTO));
         return bookMapper.toDTO(book);
     }
-    //na to ftiaksw, na kanw git
+
     public BookDTO updateBook(Long id, BookDTO bookDTO){
         Book existingBook =  bookRepository.findById(id)
                 .orElse(new Book());
