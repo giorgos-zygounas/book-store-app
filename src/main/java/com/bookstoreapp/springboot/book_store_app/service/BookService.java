@@ -1,6 +1,7 @@
 package com.bookstoreapp.springboot.book_store_app.service;
 
 import com.bookstoreapp.springboot.book_store_app.dto.BookDTO;
+import com.bookstoreapp.springboot.book_store_app.exception.BookNotFoundException;
 import com.bookstoreapp.springboot.book_store_app.mapper.BookMapper;
 import com.bookstoreapp.springboot.book_store_app.model.Book;
 import com.bookstoreapp.springboot.book_store_app.repository.BookRepository;
@@ -36,24 +37,30 @@ public class BookService {
     public BookDTO getBookById(Long id){
         return bookRepository.findById(id)
                 .map(bookMapper::toDTO)
-                .orElseThrow(()-> new NoSuchElementException("Book with id " + id + " not found"));
+                .orElseThrow(() -> new BookNotFoundException(id));
     }
 
     //create update
     public BookDTO createBook(BookDTO bookDTO)
     {
-
         Book book = bookRepository.save(bookMapper.toEntity(bookDTO));
         return bookMapper.toDTO(book);
     }
 
     public BookDTO updateBook(Long id, BookDTO bookDTO){
+
         Book existingBook =  bookRepository.findById(id)
-                .orElse(new Book());
-
+                        .orElseThrow(() -> new BookNotFoundException(id));
         bookMapper.updateBookFromDTO(bookDTO, existingBook);
-
         return bookMapper.toDTO(bookRepository.save(existingBook));
+    }
+
+    public void deleteBook(Long id){
+
+        if (!bookRepository.existsById(id)) {
+            throw new BookNotFoundException(id);
+        }
+        bookRepository.deleteById(id);
     }
 
 }

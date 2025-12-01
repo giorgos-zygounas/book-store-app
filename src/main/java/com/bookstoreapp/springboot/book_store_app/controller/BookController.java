@@ -1,10 +1,8 @@
 package com.bookstoreapp.springboot.book_store_app.controller;
 
 import com.bookstoreapp.springboot.book_store_app.dto.BookDTO;
-import com.bookstoreapp.springboot.book_store_app.model.Book;
 import com.bookstoreapp.springboot.book_store_app.service.BookService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,17 +30,6 @@ public class BookController {
         return bookService.getBookById(id);
     }
 
-//    @PostMapping
-//    public BookDTO createBook(@RequestBody BookDTO bookDTO){
-//
-//        return bookService.createBook(bookDTO);
-//    }
-//    @PutMapping
-//    public BookDTO createBook(@RequestBody BookDTO bookDTO, Long id){
-//
-//        return bookService.updateBook(id, bookDTO);
-//    }
-
     @PostMapping
     public ResponseEntity<BookDTO> createBook(@RequestBody BookDTO bookDTO) {
         BookDTO createdBook = bookService.createBook(bookDTO);
@@ -54,8 +41,11 @@ public class BookController {
         BookDTO updatedBook = bookService.updateBook(id, bookDTO);
         return ResponseEntity.ok(updatedBook);
     }
-
-
+    @DeleteMapping(path = "/{id}")
+    public ResponseEntity<Void> deleteBook(@PathVariable Long id){
+        bookService.deleteBook(id);
+        return ResponseEntity.noContent().build();
+    }
 
 }
 
