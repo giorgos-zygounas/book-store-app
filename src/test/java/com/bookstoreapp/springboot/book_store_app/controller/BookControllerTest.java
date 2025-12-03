@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
-@WebMvcTest
+@WebMvcTest(BookController.class)
 @AutoConfigureMockMvc
 public class BookControllerTest {
 
@@ -38,7 +38,7 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Test get books")
-    void testGetBooks() throws Exception{
+    void testGetBooks() throws Exception {
 
         List<BookDTO> mockBooks = List.of(
                 new BookDTO("Title 1", "Author 1", "Good book", new BigDecimal("10.99"), true),
@@ -69,13 +69,13 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Test get book by id - Success")
-    void testGetBookByIdSuccess() throws Exception{
+    void testGetBookByIdSuccess() throws Exception {
         BookDTO expectedDTO = new BookDTO("Title 1", "Author 1", "Good book"
                 , new BigDecimal("10.99"), true);
 
         when(service.getBookById(1L)).thenReturn(expectedDTO);
 
-        mockMvc.perform(get("/books/{id}",1))
+        mockMvc.perform(get("/books/{id}", 1))
 
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -89,20 +89,20 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Test get book by id not found")
-    void testGetBookByIdNotFound() throws Exception{
+    void testGetBookByIdNotFound() throws Exception {
 
         doThrow(new BookNotFoundException(1L)).when(service).getBookById(1L);
 
         mockMvc.perform(get("/books/{id}", 1))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$.error", is("Book with id 1 not found")));
+                .andExpect(jsonPath("$.error", is("Book with id 1 not found")));
     }
 
-//TODO POST BOOKS, PUT AND DELETE(SUCCESS AND NOT FOUND), MAPPER TESTS, EXCEPTIONS AND VALIDATIONS(LATER)
+    //TODO POST BOOKS, PUT AND DELETE(SUCCESS AND NOT FOUND), MAPPER TESTS, EXCEPTIONS AND VALIDATIONS(LATER)
     @Test
     @DisplayName("Test create book")
-    void testCreateBook() throws Exception{
+    void testCreateBook() throws Exception {
         BookDTO postBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
                 , new BigDecimal("10.99"), true);
         BookDTO mockBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
@@ -123,9 +123,10 @@ public class BookControllerTest {
                 .andExpect(jsonPath("$.available", is(true)));
 
     }
+
     @Test
     @DisplayName("Test update book details - Success")
-    void updateBookSuccess() throws Exception{
+    void updateBookSuccess() throws Exception {
         BookDTO putBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
                 , new BigDecimal("10.99"), true);
         BookDTO mockBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
@@ -148,7 +149,7 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Test update book details failed")
-    void testUpdateBookFailed() throws Exception{
+    void testUpdateBookFailed() throws Exception {
         BookDTO putBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
                 , new BigDecimal("10.99"), true);
 
@@ -156,8 +157,8 @@ public class BookControllerTest {
 
         mockMvc.perform(put("/books/{id}", 1)
 
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJsonString(putBookDTO)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(putBookDTO)))
 
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -166,7 +167,7 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Test delete book - Success")
-    void testDeleteBookSuccess() throws Exception{
+    void testDeleteBookSuccess() throws Exception {
 
         doNothing().when(service).deleteBook(1L);
 
@@ -177,7 +178,7 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Test delete book failed")
-    void testDeleteBookFailed() throws Exception{
+    void testDeleteBookFailed() throws Exception {
 
         doThrow(new BookNotFoundException(1L)).when(service).deleteBook(1L);
 
@@ -195,4 +196,5 @@ public class BookControllerTest {
             throw new RuntimeException(e);
         }
     }
+
 }
