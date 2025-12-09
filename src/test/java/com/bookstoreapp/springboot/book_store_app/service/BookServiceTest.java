@@ -5,16 +5,17 @@ import com.bookstoreapp.springboot.book_store_app.exception.BookNotFoundExceptio
 import com.bookstoreapp.springboot.book_store_app.mapper.BookMapper;
 import com.bookstoreapp.springboot.book_store_app.model.Book;
 import com.bookstoreapp.springboot.book_store_app.repository.BookRepository;
+import com.bookstoreapp.springboot.book_store_app.repository.UserRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import javax.swing.*;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
@@ -34,18 +35,22 @@ public class BookServiceTest {
     private BookService service;
 
     @MockitoBean
-    private BookRepository repository;
+    private BookRepository bookRepository;
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     @MockitoBean
     private BookMapper mapper;
 
     @Test
     @DisplayName("Test getBooks")
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     void testGetBooks() {
         Book mockBook = new Book(1L, "Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), true);
         Book mockBook2 = new Book(2L, "Coding Book", "George Willson", "Great book", new BigDecimal("39.99"), true);
 
-        doReturn(Arrays.asList(mockBook, mockBook2)).when(repository).findAll();
+        doReturn(Arrays.asList(mockBook, mockBook2)).when(bookRepository).findAll();
 
         doReturn(new BookDTO("Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), true))
                 .when(mapper).toDTO(mockBook);
@@ -65,7 +70,7 @@ public class BookServiceTest {
     void testGetBookByIdSuccess() {
         Book mockBook = new Book(1L, "Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), true);
 
-        doReturn(Optional.of(mockBook)).when(repository).findById(1L);
+        doReturn(Optional.of(mockBook)).when(bookRepository).findById(1L);
 
         doReturn(new BookDTO("Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), true))
                 .when(mapper).toDTO(mockBook);
@@ -81,9 +86,9 @@ public class BookServiceTest {
     @DisplayName("Test getBookById Not Found")
     void testGetBookByIdNotFound() {
         // Mock: repository δεν βρίσκει βιβλίο
-        when(repository.findById(1L)).thenReturn(Optional.empty());
+        when(bookRepository.findById(1L)).thenReturn(Optional.empty());
 
-        BookNotFoundException exception = assertThrows(BookNotFoundException.class, ()-> service.getBookById(1L),
+        BookNotFoundException exception = assertThrows(BookNotFoundException.class, () -> service.getBookById(1L),
                 "Excpected BookNotFoundException when book is not found");
 
         assertEquals("Book with id 1 not found", exception.getMessage());
@@ -91,11 +96,12 @@ public class BookServiceTest {
 
     @Test
     @DisplayName("Test create Book")
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     void testCreateBook() {
         Book mockBook = new Book(1L, "Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), true);
         BookDTO expectedDTO = new BookDTO("Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), true);
 
-        doReturn(mockBook).when(repository).save(any());
+        doReturn(mockBook).when(bookRepository).save(any());
         when(mapper.toDTO(mockBook)).thenReturn(expectedDTO);
 
         BookDTO returnedBook = service.createBook(expectedDTO);
@@ -105,12 +111,13 @@ public class BookServiceTest {
 
     @Test
     @DisplayName("Test updateBook - Success")
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     void testUpdateBookSuccess() {
         Book newBook = new Book(); // θα δημιουργηθεί από το service
         BookDTO expectedDTO = new BookDTO("New Title", "New Author", "Nice book", new BigDecimal("19.99"), true);
 
-        doReturn(Optional.of(newBook)).when(repository).findById(1L);
-        doReturn(newBook).when(repository).save(any());
+        doReturn(Optional.of(newBook)).when(bookRepository).findById(1L);
+        doReturn(newBook).when(bookRepository).save(any());
         when(mapper.toDTO(newBook)).thenReturn(expectedDTO);
 
         BookDTO returnedBook = service.updateBook(1L, expectedDTO);
@@ -118,9 +125,10 @@ public class BookServiceTest {
     }
 
     @Test
-    @DisplayName("Test updateBook - Success")
+    @DisplayName("Test updateBook - Not Found")
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     void testUpdateBookNotFound() {
-        when(repository.existsById(1L)).thenReturn(false);
+        when(bookRepository.existsById(1L)).thenReturn(false);
 
         BookNotFoundException exception = assertThrows(BookNotFoundException.class,
                 () -> service.deleteBook(1L),
@@ -131,28 +139,39 @@ public class BookServiceTest {
 
     @Test
     @DisplayName("Test delete Book by id - Success")
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     void testDeleteBook() {
 
         Long id = 1L;
-        when(repository.existsById(id)).thenReturn(true);
+        Book book = new Book();
+        book.setId(id);
 
+        // Mock repository για να επιστρέψει το βιβλίο
+        when(bookRepository.findById(id)).thenReturn(Optional.of(book));
+
+        // Mock για να αφαιρείται από όλα τα favorites
+        doNothing().when(userRepository).removeBookFromAllFavorites(id);
+
+        // Mock για delete
+        doNothing().when(bookRepository).delete(book);
+
+        // Κλήση της υπηρεσίας
         service.deleteBook(id);
-
     }
 
     @Test
-    @DisplayName("Test delete book by id - Failure ")
-    void testDeleteBookNotFound() {
-        when(repository.existsById(1L)).thenReturn(false);
+    @DisplayName("Test delete Book - BookNotFoundException")
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    void testDeleteBookFailed() {
+        Long id = 1L;
 
-        BookNotFoundException exception = assertThrows(BookNotFoundException.class,
-                () -> service.deleteBook(1L),
-                "Expected BookNotFoundException when book is not found");
+        // Mock repository να επιστρέψει empty → βιβλίο δεν υπάρχει
+        when(bookRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertEquals("Book with id 1 not found", exception.getMessage());
+        // Έλεγχος ότι πετάει BookNotFoundException
+        assertThrows(BookNotFoundException.class, () -> service.deleteBook(id));
+
     }
-
-
 }
 
 

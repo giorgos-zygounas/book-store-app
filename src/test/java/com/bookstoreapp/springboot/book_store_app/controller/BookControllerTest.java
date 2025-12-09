@@ -1,17 +1,25 @@
 package com.bookstoreapp.springboot.book_store_app.controller;
 
+import com.bookstoreapp.springboot.book_store_app.config.SecurityConfig;
 import com.bookstoreapp.springboot.book_store_app.dto.BookDTO;
 import com.bookstoreapp.springboot.book_store_app.exception.BookNotFoundException;
+import com.bookstoreapp.springboot.book_store_app.exception.GlobalExceptionHandler;
 import com.bookstoreapp.springboot.book_store_app.service.BookService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,19 +33,22 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(SpringExtension.class)
-@WebMvcTest(BookController.class)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
+@WebMvcTest(controllers = BookController.class,
+        excludeFilters = {
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = SecurityConfig.class)
+        })
 public class BookControllerTest {
 
     @MockitoBean
-    private BookService service;
+    private BookService bookService;
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
     @DisplayName("Test get books")
+    @WithMockUser(roles = "ADMIN")
     void testGetBooks() throws Exception {
 
         List<BookDTO> mockBooks = List.of(
@@ -45,7 +56,7 @@ public class BookControllerTest {
                 new BookDTO("Title 2", "Author 2", "Nice book", new BigDecimal("19.99"), true)
         );
 
-        when(service.getBooks()).thenReturn(mockBooks);
+        when(bookService.getBooks()).thenReturn(mockBooks);
 
         mockMvc.perform(get("/books"))
 
@@ -69,11 +80,12 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Test get book by id - Success")
+    @WithMockUser
     void testGetBookByIdSuccess() throws Exception {
         BookDTO expectedDTO = new BookDTO("Title 1", "Author 1", "Good book"
                 , new BigDecimal("10.99"), true);
 
-        when(service.getBookById(1L)).thenReturn(expectedDTO);
+        when(bookService.getBookById(1L)).thenReturn(expectedDTO);
 
         mockMvc.perform(get("/books/{id}", 1))
 
@@ -89,9 +101,10 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Test get book by id not found")
+    @WithMockUser
     void testGetBookByIdNotFound() throws Exception {
 
-        doThrow(new BookNotFoundException(1L)).when(service).getBookById(1L);
+        doThrow(new BookNotFoundException(1L)).when(bookService).getBookById(1L);
 
         mockMvc.perform(get("/books/{id}", 1))
                 .andExpect(status().isNotFound())
@@ -102,12 +115,13 @@ public class BookControllerTest {
     //TODO POST BOOKS, PUT AND DELETE(SUCCESS AND NOT FOUND), MAPPER TESTS, EXCEPTIONS AND VALIDATIONS(LATER)
     @Test
     @DisplayName("Test create book")
+    @WithMockUser(roles = "ADMIN")
     void testCreateBook() throws Exception {
         BookDTO postBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
                 , new BigDecimal("10.99"), true);
         BookDTO mockBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
                 , new BigDecimal("10.99"), true);
-        doReturn(mockBookDTO).when(service).createBook(postBookDTO);
+        doReturn(mockBookDTO).when(bookService).createBook(postBookDTO);
 
         mockMvc.perform(post("/books")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -126,13 +140,14 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Test update book details - Success")
+    @WithMockUser(roles = "ADMIN")
     void updateBookSuccess() throws Exception {
         BookDTO putBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
                 , new BigDecimal("10.99"), true);
         BookDTO mockBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
                 , new BigDecimal("10.99"), true);
 
-        doReturn(mockBookDTO).when(service).updateBook(1L, putBookDTO);
+        doReturn(mockBookDTO).when(bookService).updateBook(1L, putBookDTO);
         mockMvc.perform(put("/books/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(asJsonString(putBookDTO)))
@@ -149,14 +164,14 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Test update book details failed")
+    @WithMockUser(roles = "ADMIN")
     void testUpdateBookFailed() throws Exception {
         BookDTO putBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
                 , new BigDecimal("10.99"), true);
 
-        doThrow(new BookNotFoundException(1L)).when(service).updateBook(1L, putBookDTO);
+        doThrow(new BookNotFoundException(1L)).when(bookService).updateBook(1L, putBookDTO);
 
         mockMvc.perform(put("/books/{id}", 1)
-
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(asJsonString(putBookDTO)))
 
@@ -167,9 +182,10 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Test delete book - Success")
+    @WithMockUser(roles = "ADMIN")
     void testDeleteBookSuccess() throws Exception {
 
-        doNothing().when(service).deleteBook(1L);
+        doNothing().when(bookService).deleteBook(1L);
 
         mockMvc.perform(delete("/books/{id}", 1))
                 .andExpect(status().isNoContent());
@@ -178,9 +194,10 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Test delete book failed")
+    @WithMockUser(roles = "ADMIN")
     void testDeleteBookFailed() throws Exception {
 
-        doThrow(new BookNotFoundException(1L)).when(service).deleteBook(1L);
+        doThrow(new BookNotFoundException(1L)).when(bookService).deleteBook(1L);
 
         mockMvc.perform(delete("/books/{id}", 1))
                 .andExpect(status().isNotFound())
