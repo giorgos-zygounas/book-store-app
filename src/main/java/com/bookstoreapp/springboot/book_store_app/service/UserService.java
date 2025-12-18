@@ -10,6 +10,7 @@ import com.bookstoreapp.springboot.book_store_app.mapper.BookMapper;
 import com.bookstoreapp.springboot.book_store_app.mapper.UserMapper;
 import com.bookstoreapp.springboot.book_store_app.model.AuthenticatedUser;
 import com.bookstoreapp.springboot.book_store_app.model.Book;
+import com.bookstoreapp.springboot.book_store_app.model.Cart;
 import com.bookstoreapp.springboot.book_store_app.model.User;
 import com.bookstoreapp.springboot.book_store_app.repository.BookRepository;
 import com.bookstoreapp.springboot.book_store_app.repository.UserRepository;
@@ -56,31 +57,35 @@ public class UserService implements UserDetailsService {
         u.setFirstName(userDTO.getFirstName());
         u.setLastName(userDTO.getLastName());
         u.setUsername(userDTO.getUsername());
-        u.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         u.setRole("USER");
         u.setEmail(userDTO.getEmail());
-        u.setCreated_at(LocalDateTime.now());
+        u.setCreatedAt(LocalDateTime.now());
+
+        Cart cart = new Cart();
+        u.setCart(cart);
+        cart.setUser(u);
 
         return userRepository.save(u);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+
     public List<UserAdminDTO> getUsers() {
         var result = userRepository.findAll()
                 .stream()
                 .map(userMapper::toAdminDTO).
                 toList();
+
         return result;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+
     public UserAdminDTO getUserById(Long id) {
         return userRepository.findById(id)
                 .map(userMapper::toAdminDTO)
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
             throw new UserNotFoundException(id);
@@ -92,7 +97,6 @@ public class UserService implements UserDetailsService {
 
     }
 
-    // "/me"
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
@@ -101,7 +105,6 @@ public class UserService implements UserDetailsService {
         return new AuthenticatedUser(u);
     }
 
-    @PreAuthorize("hasRole('USER')")
     public UserMeDTO getUserDetails(String username) {
 
         return userRepository.findByUsername(username)
@@ -109,7 +112,6 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UserNotFoundException(username));
     }
 
-    @PreAuthorize("hasRole('USER')")
     public List<BookDTO> getFavoriteBooks(String username){
         User user  = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(username));
@@ -120,7 +122,6 @@ public class UserService implements UserDetailsService {
 
     }
 
-    @PreAuthorize("hasRole('USER')")
     public void addFavoriteBook(String username, Long bookId){
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(username));
@@ -134,7 +135,6 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    @PreAuthorize("hasRole('USER')")
     public void removeFavoriteBook(String username, Long bookId){
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(username));
@@ -147,5 +147,18 @@ public class UserService implements UserDetailsService {
             userRepository.save(user);
         }
     }
-    // TODO ALL FAVORITES ENDPOINTS AND TESTS
+
+    public UserAdminDTO updateUser(String username, UserMeDTO updateDTO){
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(username));
+
+        if(updateDTO.getUsername() != null) user.setUsername(updateDTO.getUsername());
+        if(updateDTO.getFirstName() != null) user.setFirstName(updateDTO.getFirstName());
+        if(updateDTO.getLastName() != null) user.setLastName(updateDTO.getLastName());
+        if(updateDTO.getEmail() != null) user.setEmail(updateDTO.getEmail());
+
+        User savedUser = userRepository.save(user);
+        return userMapper.toAdminDTO(savedUser);
+    }
+
 }

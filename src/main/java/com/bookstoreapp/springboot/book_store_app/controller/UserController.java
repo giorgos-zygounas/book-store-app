@@ -53,6 +53,14 @@ public class UserController {
         return userService.getUserById(id);
     }
 
+    @PutMapping("/me")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<String> updateUser(@RequestBody UserMeDTO updateDTO){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserAdminDTO updatedUser = userService.updateUser(username, updateDTO);
+        return ResponseEntity.ok("User details updated successfully");
+    }
+
     @DeleteMapping(path = "/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     ResponseEntity<String> deleteUser(@PathVariable("id") Long id){
@@ -66,11 +74,6 @@ public class UserController {
     public UserMeDTO getUserDetails() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         UserMeDTO dto = userService.getUserDetails(username);
-        var role = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
-        log.info(role.toString());
-        if (dto == null) {
-            throw new UserNotFoundException(username);
-        }
         return dto;
     }
 

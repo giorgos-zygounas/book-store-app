@@ -10,6 +10,7 @@ import com.bookstoreapp.springboot.book_store_app.mapper.BookMapper;
 import com.bookstoreapp.springboot.book_store_app.mapper.UserMapper;
 import com.bookstoreapp.springboot.book_store_app.model.AuthenticatedUser;
 import com.bookstoreapp.springboot.book_store_app.model.Book;
+import com.bookstoreapp.springboot.book_store_app.model.Cart;
 import com.bookstoreapp.springboot.book_store_app.model.User;
 import com.bookstoreapp.springboot.book_store_app.repository.BookRepository;
 import com.bookstoreapp.springboot.book_store_app.repository.UserRepository;
@@ -68,7 +69,7 @@ public class UserServiceTest {
     @Test
     @DisplayName("Test loadUserByUsername – Success")
     void testLoadUserByUsername() {
-        User u = new User(1L, "John", "Smith", "john1", "pw", "USER", "john@mail.com", LocalDateTime.now(),new ArrayList<Book>());
+        User u = new User(1L, "John", "Smith", "john1", "pw", "USER", "john@mail.com", LocalDateTime.now(),new ArrayList<Book>(), new Cart());
 
         when(userRepository.findByUsername("john1")).thenReturn(Optional.of(u));
 
@@ -90,7 +91,7 @@ public class UserServiceTest {
     @Test
     @DisplayName("Test register user - Success")
     void testRegisterUser(){
-        UserMeDTO dto = new UserMeDTO("John", "Smith", "john123", "password", "john@mail.com");
+        UserMeDTO dto = new UserMeDTO("John", "Smith", "john123","john@mail.com");
 
         User savedUser = new User();
 
@@ -101,7 +102,7 @@ public class UserServiceTest {
         savedUser.setPassword("encoded-pw");
         savedUser.setEmail("john@mail.com");
         savedUser.setRole("USER");
-        savedUser.setCreated_at(LocalDateTime.now());
+        savedUser.setCreatedAt(LocalDateTime.now());
 
         when(passwordEncoder.encode("password")).thenReturn("encoded-pw");
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
@@ -116,7 +117,7 @@ public class UserServiceTest {
     @DisplayName("Test register user - Failed")
     void testRegisterUserFailed() {
 
-        UserMeDTO dto = new UserMeDTO("John", "Smith", "john", "", "john@mail.com");
+        UserMeDTO dto = new UserMeDTO("John", "Smith", "john","john@mail.com");
 
         when(userRepository.existsByUsername("john")).thenReturn(true);
 
@@ -130,8 +131,8 @@ public class UserServiceTest {
     @DisplayName("Test getUserDetails - Success")
     @WithMockUser(roles = "USER")
     void testGetUserDetailsSuccess(){
-        User u = new User(1L, "John", "Smith", "john1", "pw", "USER", "john@mail.com", LocalDateTime.now(), new ArrayList<Book>());
-        UserMeDTO dto = new UserMeDTO("John", "Smith", "john1", "", "john@mail.com");
+        User u = new User(1L, "John", "Smith", "john1", "pw", "USER", "john@mail.com", LocalDateTime.now(), new ArrayList<Book>(), new Cart());
+        UserMeDTO dto = new UserMeDTO("John", "Smith", "john1","john@mail.com");
 
         when(userRepository.findByUsername("john1")).thenReturn(Optional.of(u));
         when(userMapper.toUserMeDTO(u)).thenReturn(dto);
@@ -155,8 +156,8 @@ public class UserServiceTest {
     @DisplayName("Test getUsers() – Success")
     @WithMockUser(roles = "ADMIN")
     void testGetUsersSuccess() {
-        User u1 = new User(1L, "John", "Smith", "john1", "pw", "USER", "john@mail.com", LocalDateTime.now(), new ArrayList<Book>());
-        User u2 = new User(2L, "Anna", "White", "anna2", "pw", "ADMIN", "anna@mail.com", LocalDateTime.now(), new ArrayList<Book>());
+        User u1 = new User(1L, "John", "Smith", "john1", "pw", "USER", "john@mail.com", LocalDateTime.now(), new ArrayList<Book>(), new Cart());
+        User u2 = new User(2L, "Anna", "White", "anna2", "pw", "ADMIN", "anna@mail.com", LocalDateTime.now(), new ArrayList<Book>(), new Cart());
 
         UserAdminDTO dto1 = new UserAdminDTO(1L, "John", "Smith", "john1","john@mail.com", "USER", LocalDateTime.now());
         UserAdminDTO dto2 = new UserAdminDTO(2L, "Anna", "White", "admin", "ADMIN", "anna@mail.com",LocalDateTime.now());
@@ -175,7 +176,7 @@ public class UserServiceTest {
     @DisplayName("Test getUserById – Success")
     @WithMockUser(roles = "ADMIN")
     void testGetUserById() {
-        User u = new User(1L, "John", "Smith", "john1", "pw", "USER", "john@mail.com", LocalDateTime.now(), new ArrayList<Book>());
+        User u = new User(1L, "John", "Smith", "john1", "pw", "USER", "john@mail.com", LocalDateTime.now(), new ArrayList<Book>(), new Cart());
         UserAdminDTO dto = new UserAdminDTO(1L, "John", "Smith", "john1", "john@mail.com","USER",LocalDateTime.now());
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(u));

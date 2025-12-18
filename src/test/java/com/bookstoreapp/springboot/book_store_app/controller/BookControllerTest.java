@@ -4,6 +4,7 @@ import com.bookstoreapp.springboot.book_store_app.config.SecurityConfig;
 import com.bookstoreapp.springboot.book_store_app.dto.BookDTO;
 import com.bookstoreapp.springboot.book_store_app.exception.BookNotFoundException;
 import com.bookstoreapp.springboot.book_store_app.exception.GlobalExceptionHandler;
+import com.bookstoreapp.springboot.book_store_app.model.AvailabilityStatus;
 import com.bookstoreapp.springboot.book_store_app.service.BookService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -52,8 +53,8 @@ public class BookControllerTest {
     void testGetBooks() throws Exception {
 
         List<BookDTO> mockBooks = List.of(
-                new BookDTO("Title 1", "Author 1", "Good book", new BigDecimal("10.99"), true),
-                new BookDTO("Title 2", "Author 2", "Nice book", new BigDecimal("19.99"), true)
+                new BookDTO(1L,"Title 1", "Author 1", "Good book", new BigDecimal("10.99"), AvailabilityStatus.AVAILABLE),
+                new BookDTO(1L,"Title 2", "Author 2", "Nice book", new BigDecimal("19.99"), AvailabilityStatus.AVAILABLE)
         );
 
         when(bookService.getBooks()).thenReturn(mockBooks);
@@ -69,12 +70,12 @@ public class BookControllerTest {
                 .andExpect(jsonPath("$[0].author", is("Author 1")))
                 .andExpect(jsonPath("$[0].description", is("Good book")))
                 .andExpect(jsonPath("$[0].price", is(10.99)))
-                .andExpect(jsonPath("$[0].available", is(true)))
+                .andExpect(jsonPath("$[0].available", is("AVAILABLE")))
                 .andExpect(jsonPath("$[1].title", is("Title 2")))
                 .andExpect(jsonPath("$[1].author", is("Author 2")))
                 .andExpect(jsonPath("$[1].description", is("Nice book")))
                 .andExpect(jsonPath("$[1].price", is(19.99)))
-                .andExpect(jsonPath("$[1].available", is(true)));
+                .andExpect(jsonPath("$[1].available", is("AVAILABLE")));
 
     }
 
@@ -82,8 +83,7 @@ public class BookControllerTest {
     @DisplayName("Test get book by id - Success")
     @WithMockUser
     void testGetBookByIdSuccess() throws Exception {
-        BookDTO expectedDTO = new BookDTO("Title 1", "Author 1", "Good book"
-                , new BigDecimal("10.99"), true);
+        BookDTO expectedDTO = new BookDTO(1L,"Title 1", "Author 1", "Good book", new BigDecimal("10.99"), AvailabilityStatus.AVAILABLE);
 
         when(bookService.getBookById(1L)).thenReturn(expectedDTO);
 
@@ -96,7 +96,7 @@ public class BookControllerTest {
                 .andExpect(jsonPath("$.author", is("Author 1")))
                 .andExpect(jsonPath("$.description", is("Good book")))
                 .andExpect(jsonPath("$.price", is(10.99)))
-                .andExpect(jsonPath("$.available", is(true)));
+                .andExpect(jsonPath("$.available", is("AVAILABLE")));
     }
 
     @Test
@@ -117,10 +117,8 @@ public class BookControllerTest {
     @DisplayName("Test create book")
     @WithMockUser(roles = "ADMIN")
     void testCreateBook() throws Exception {
-        BookDTO postBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
-                , new BigDecimal("10.99"), true);
-        BookDTO mockBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
-                , new BigDecimal("10.99"), true);
+        BookDTO postBookDTO = new BookDTO(1L,"Title 1", "Author 1", "Good book", new BigDecimal("10.99"), AvailabilityStatus.AVAILABLE);
+        BookDTO mockBookDTO = new BookDTO(1L,"Title 1", "Author 1", "Good book", new BigDecimal("10.99"), AvailabilityStatus.AVAILABLE);
         doReturn(mockBookDTO).when(bookService).createBook(postBookDTO);
 
         mockMvc.perform(post("/books")
@@ -134,7 +132,7 @@ public class BookControllerTest {
                 .andExpect(jsonPath("$.author", is("Author 1")))
                 .andExpect(jsonPath("$.description", is("Good book")))
                 .andExpect(jsonPath("$.price", is(10.99)))
-                .andExpect(jsonPath("$.available", is(true)));
+                .andExpect(jsonPath("$.available", is("AVAILABLE")));
 
     }
 
@@ -142,10 +140,8 @@ public class BookControllerTest {
     @DisplayName("Test update book details - Success")
     @WithMockUser(roles = "ADMIN")
     void updateBookSuccess() throws Exception {
-        BookDTO putBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
-                , new BigDecimal("10.99"), true);
-        BookDTO mockBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
-                , new BigDecimal("10.99"), true);
+        BookDTO putBookDTO = new BookDTO(1L,"Title 1", "Author 1", "Good book", new BigDecimal("10.99"), AvailabilityStatus.AVAILABLE);
+        BookDTO mockBookDTO = new BookDTO(1L,"Title 1", "Author 1", "Good book", new BigDecimal("10.99"), AvailabilityStatus.AVAILABLE);
 
         doReturn(mockBookDTO).when(bookService).updateBook(1L, putBookDTO);
         mockMvc.perform(put("/books/{id}", 1)
@@ -159,15 +155,14 @@ public class BookControllerTest {
                 .andExpect(jsonPath("$.author", is("Author 1")))
                 .andExpect(jsonPath("$.description", is("Good book")))
                 .andExpect(jsonPath("$.price", is(10.99)))
-                .andExpect(jsonPath("$.available", is(true)));
+                .andExpect(jsonPath("$.available", is("AVAILABLE")));
     }
 
     @Test
     @DisplayName("Test update book details failed")
     @WithMockUser(roles = "ADMIN")
     void testUpdateBookFailed() throws Exception {
-        BookDTO putBookDTO = new BookDTO("Title 1", "Author 1", "Good book"
-                , new BigDecimal("10.99"), true);
+        BookDTO putBookDTO = new BookDTO(1L,"Title 1", "Author 1", "Good book", new BigDecimal("10.99"), AvailabilityStatus.AVAILABLE);
 
         doThrow(new BookNotFoundException(1L)).when(bookService).updateBook(1L, putBookDTO);
 
@@ -188,7 +183,7 @@ public class BookControllerTest {
         doNothing().when(bookService).deleteBook(1L);
 
         mockMvc.perform(delete("/books/{id}", 1))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
 
     }
 

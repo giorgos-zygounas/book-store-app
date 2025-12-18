@@ -7,6 +7,7 @@ import com.bookstoreapp.springboot.book_store_app.dto.UserMeDTO;
 import com.bookstoreapp.springboot.book_store_app.exception.BookNotFoundException;
 import com.bookstoreapp.springboot.book_store_app.exception.UserNotFoundException;
 import com.bookstoreapp.springboot.book_store_app.mapper.BookMapper;
+import com.bookstoreapp.springboot.book_store_app.model.AvailabilityStatus;
 import com.bookstoreapp.springboot.book_store_app.model.Book;
 import com.bookstoreapp.springboot.book_store_app.model.User;
 import com.bookstoreapp.springboot.book_store_app.repository.UserRepository;
@@ -66,7 +67,7 @@ public class UserControllerTest {
     @Test
     @DisplayName("Register user - Success")
     void testRegisterUser() throws Exception {
-        UserMeDTO dto = new UserMeDTO("John", "Doe", "john", "1234", "john@test.com");
+        UserMeDTO dto = new UserMeDTO("John", "Doe", "john","john@test.com");
 
         when(userService.register(any(UserMeDTO.class))).thenReturn(new User());
 
@@ -80,7 +81,7 @@ public class UserControllerTest {
     @Test
     @DisplayName("Register user - service throws exception")
     void testRegisterUserThrowsException() throws Exception {
-        UserMeDTO dto = new UserMeDTO("John", "Doe", "john", "1234", "john@test.com");
+        UserMeDTO dto = new UserMeDTO("John", "Doe", "john","john@test.com");
 
         when(userService.register(any(UserMeDTO.class)))
                 .thenThrow(new RuntimeException("Unexpected error"));
@@ -184,7 +185,7 @@ public class UserControllerTest {
     @WithMockUser(username = "john", roles = {"USER"})
     void testGetMeSuccess() throws Exception {
 
-        UserMeDTO dto = new UserMeDTO("John", "Doe", "john", null, "john@test.com");
+        UserMeDTO dto = new UserMeDTO("John", "Doe", "john","john@test.com");
 
         when(userService.getUserDetails("john")).thenReturn(dto);
 
@@ -199,11 +200,13 @@ public class UserControllerTest {
     @WithMockUser(username = "john", roles = {"USER"})
     void testGetMeNull() throws Exception {
 
-        when(userService.getUserDetails("john")).thenReturn(null);
+        when(userService.getUserDetails("john"))
+                .thenThrow(new UserNotFoundException("john"));
 
         mockMvc.perform(get("/users/me"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error", is("User not found with username: john")));
+                .andExpect(jsonPath("$.error")
+                        .value("User not found with username: john"));
     }
 
     @Test
@@ -212,7 +215,6 @@ public class UserControllerTest {
         mockMvc.perform(get("/users/me"))
                 .andExpect(status().isUnauthorized());
     }
-
 
     @Test
     @DisplayName("Test get favorite books - Success")
@@ -223,8 +225,8 @@ public class UserControllerTest {
         user.setUsername("john");
 
         List<BookDTO> favorites = List.of(
-                new BookDTO("Title 1", "Author 1", "Good book", new BigDecimal("10.99"), true),
-                new BookDTO("Title 2", "Author 2", "Nice book", new BigDecimal("20.99"), true)
+                new BookDTO(1L, "Title 1", "Author 1", "Good book", new BigDecimal("10.99"), AvailabilityStatus.AVAILABLE),
+                new BookDTO(1L,"Title 2", "Author 2", "Nice book", new BigDecimal("20.99"), AvailabilityStatus.AVAILABLE)
         );
 
         when(userService.getFavoriteBooks("john")).thenReturn(favorites);
@@ -262,7 +264,7 @@ public class UserControllerTest {
         User user = new User();
         user.setUsername("john");
 
-        doNothing().when(userService).removeFavoriteBook(user.getUsername(), 1L);
+        doNothing().when(userService).removeFavoriteBook("john", 1L);
 
         mockMvc.perform(delete("/users/me/favorites/{book_id}", 1))
                 .andExpect(status().isOk());

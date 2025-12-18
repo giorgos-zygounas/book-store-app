@@ -1,6 +1,7 @@
 package com.bookstoreapp.springboot.book_store_app.mapper;
 
 import com.bookstoreapp.springboot.book_store_app.dto.BookDTO;
+import com.bookstoreapp.springboot.book_store_app.model.AvailabilityStatus;
 import com.bookstoreapp.springboot.book_store_app.model.Book;
 import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,8 +29,7 @@ public class BookMapperTest {
 
     @Test
     public void whenMappingDtoToEntity_thenFieldsMatch() {
-        BookDTO dto = new BookDTO("Title 1", "Author 1", "Good book", new BigDecimal("10.99"), true);
-
+        BookDTO dto = new BookDTO(1L,"Title 1", "Author 1", "Good book", new BigDecimal("10.99"), AvailabilityStatus.AVAILABLE);
         Book result = bookMapper.toEntity(dto);
 
         assertNotNull(result);
@@ -37,12 +37,12 @@ public class BookMapperTest {
         assertEquals("Author 1", result.getAuthor());
         assertEquals("Good book", result.getDescription());
         assertEquals(new BigDecimal("10.99"), result.getPrice());
-        assertTrue(result.isAvailable());
+        assertEquals(AvailabilityStatus.AVAILABLE, result.getAvailable());
     }
 
     @Test
     public void whenMappingEntityToDto_thenFieldsMatch() {
-        Book bookEntity = new Book(1L, "Title 1", "Author 1", "Good book", new BigDecimal("10.99"), true);
+        Book bookEntity = new Book(1L, "Title 1", "Author 1", "Good book", new BigDecimal("10.99"), AvailabilityStatus.AVAILABLE);
 
         BookDTO result = bookMapper.toDTO(bookEntity);
 
@@ -51,13 +51,12 @@ public class BookMapperTest {
         assertEquals("Author 1", result.getAuthor());
         assertEquals("Good book", result.getDescription());
         assertEquals(new BigDecimal("10.99"), result.getPrice());
-        assertTrue(result.isAvailable());
+        assertEquals(AvailabilityStatus.AVAILABLE, result.getAvailable());
     }
 
     @Test
     public void whenMappingDtoToEntityAndBack_thenDataIsConsistent() {
-        BookDTO dto = new BookDTO("Title 1", "Author 1", "Good book", new BigDecimal("10.99"), true);
-
+        BookDTO dto = new BookDTO(1L,"Title 1", "Author 1", "Good book", new BigDecimal("10.99"), AvailabilityStatus.AVAILABLE);
         Book entity = bookMapper.toEntity(dto);
         BookDTO result = bookMapper.toDTO(entity);
 
@@ -71,8 +70,8 @@ public class BookMapperTest {
 
     @Test
     public void testUpdateBookFromDto() {
-        Book bookEntity = new Book(1L, "Old Title", "Old Author", "Old Desc", new BigDecimal("5.00"), false);
-        BookDTO dto = new BookDTO("New Title", "New Author", "New Desc", new BigDecimal("9.99"), true);
+        Book bookEntity = new Book(1L, "Old Title", "Old Author", "Old Desc", new BigDecimal("5.00"), AvailabilityStatus.UNAVAILABLE);
+        BookDTO dto = new BookDTO(1L,"New Title", "New Author", "New Desc", new BigDecimal("9.99"), AvailabilityStatus.AVAILABLE);
 
         bookMapper.updateBookFromDTO(dto, bookEntity);
 
@@ -81,7 +80,7 @@ public class BookMapperTest {
         assertEquals("New Author", bookEntity.getAuthor());
         assertEquals("New Desc", bookEntity.getDescription());
         assertEquals(new BigDecimal("9.99"), bookEntity.getPrice());
-        assertTrue(bookEntity.isAvailable());
+        assertEquals(AvailabilityStatus.AVAILABLE, bookEntity.getAvailable());
     }
 }
 

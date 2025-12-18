@@ -1,5 +1,6 @@
 package com.bookstoreapp.springboot.book_store_app.dto;
 
+import com.bookstoreapp.springboot.book_store_app.model.AvailabilityStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,13 +13,14 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookDTO {
+    private Long id;
     private String title;
     private String author;
     private String description;
     private BigDecimal price;
-    private boolean available;
+    private AvailabilityStatus available;
 
-    public boolean isAvailable() {
+    public AvailabilityStatus isAvailable() {
         return available;
     }
 

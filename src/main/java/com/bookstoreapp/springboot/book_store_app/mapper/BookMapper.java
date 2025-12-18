@@ -10,7 +10,7 @@ import org.mapstruct.MappingTarget;
 public interface BookMapper {
     Book toEntity(BookDTO bookDTO);
     BookDTO toDTO(Book book);
-//    List<BookDTO> toDTOlist(List<Book> books);
+    @Mapping(target = "id", ignore = true)
     void  updateBookFromDTO(BookDTO bookDTO, @MappingTarget Book book);
 }
 

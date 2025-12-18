@@ -34,6 +34,12 @@ public class GlobalExceptionHandler {
         Map<String, String> body = Map.of("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
+
+    @ExceptionHandler(CartIsEmptyException.class)
+    public ResponseEntity<Map<String, String>> handleCartIsEmptyException(CartIsEmptyException ex) {
+        Map<String, String> body = Map.of("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
 }
 
 

@@ -3,6 +3,7 @@ package com.bookstoreapp.springboot.book_store_app.service;
 import com.bookstoreapp.springboot.book_store_app.dto.BookDTO;
 import com.bookstoreapp.springboot.book_store_app.exception.BookNotFoundException;
 import com.bookstoreapp.springboot.book_store_app.mapper.BookMapper;
+import com.bookstoreapp.springboot.book_store_app.model.AvailabilityStatus;
 import com.bookstoreapp.springboot.book_store_app.model.Book;
 import com.bookstoreapp.springboot.book_store_app.repository.BookRepository;
 import com.bookstoreapp.springboot.book_store_app.repository.UserRepository;
@@ -47,15 +48,15 @@ public class BookServiceTest {
     @DisplayName("Test getBooks")
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     void testGetBooks() {
-        Book mockBook = new Book(1L, "Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), true);
-        Book mockBook2 = new Book(2L, "Coding Book", "George Willson", "Great book", new BigDecimal("39.99"), true);
+        Book mockBook = new Book(1L, "Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), AvailabilityStatus.AVAILABLE);
+        Book mockBook2 = new Book(2L, "Coding Book", "George Willson", "Great book", new BigDecimal("39.99"), AvailabilityStatus.AVAILABLE);
 
         doReturn(Arrays.asList(mockBook, mockBook2)).when(bookRepository).findAll();
 
-        doReturn(new BookDTO("Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), true))
+        doReturn(new BookDTO(1L,"Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), AvailabilityStatus.AVAILABLE))
                 .when(mapper).toDTO(mockBook);
 
-        doReturn(new BookDTO("Coding Book", "George Willson", "Great book", new BigDecimal("39.99"), true))
+        doReturn(new BookDTO(1L,"Coding Book", "George Willson", "Great book", new BigDecimal("39.99"), AvailabilityStatus.AVAILABLE))
                 .when(mapper).toDTO(mockBook2);
 
         //doReturn(Arrays.asList(mapper.toDTO(mockBook), mapper.toDTO(mockBook2))).when(repository).findAll();
@@ -68,11 +69,11 @@ public class BookServiceTest {
     @Test
     @DisplayName("Test getBookById")
     void testGetBookByIdSuccess() {
-        Book mockBook = new Book(1L, "Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), true);
+        Book mockBook = new Book(1L, "Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), AvailabilityStatus.AVAILABLE);
 
         doReturn(Optional.of(mockBook)).when(bookRepository).findById(1L);
 
-        doReturn(new BookDTO("Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), true))
+        doReturn(new BookDTO(1L,"Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), AvailabilityStatus.AVAILABLE))
                 .when(mapper).toDTO(mockBook);
 
         //doReturn(Arrays.asList(mapper.toDTO(mockBook), mapper.toDTO(mockBook2))).when(repository).findAll();
@@ -98,8 +99,8 @@ public class BookServiceTest {
     @DisplayName("Test create Book")
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     void testCreateBook() {
-        Book mockBook = new Book(1L, "Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), true);
-        BookDTO expectedDTO = new BookDTO("Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), true);
+        Book mockBook = new Book(1L, "Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), AvailabilityStatus.AVAILABLE);
+        BookDTO expectedDTO = new BookDTO(1L,"Test Book", "Jones Smith", "Nice book", new BigDecimal("19.99"), AvailabilityStatus.AVAILABLE);
 
         doReturn(mockBook).when(bookRepository).save(any());
         when(mapper.toDTO(mockBook)).thenReturn(expectedDTO);
@@ -114,7 +115,7 @@ public class BookServiceTest {
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     void testUpdateBookSuccess() {
         Book newBook = new Book(); // θα δημιουργηθεί από το service
-        BookDTO expectedDTO = new BookDTO("New Title", "New Author", "Nice book", new BigDecimal("19.99"), true);
+        BookDTO expectedDTO = new BookDTO(1L,"New Title", "New Author", "Nice book", new BigDecimal("19.99"), AvailabilityStatus.AVAILABLE);
 
         doReturn(Optional.of(newBook)).when(bookRepository).findById(1L);
         doReturn(newBook).when(bookRepository).save(any());

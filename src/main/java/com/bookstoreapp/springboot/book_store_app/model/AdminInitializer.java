@@ -22,7 +22,7 @@ public class AdminInitializer {
                 admin.setFirstName("System");
                 admin.setLastName("Admin");
                 admin.setRole("ADMIN");
-                admin.setCreated_at(LocalDateTime.now());
+                admin.setCreatedAt(LocalDateTime.now());
                 return repo.save(admin);
             });
         };

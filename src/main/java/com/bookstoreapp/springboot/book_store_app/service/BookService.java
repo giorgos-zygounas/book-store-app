@@ -5,8 +5,11 @@ import com.bookstoreapp.springboot.book_store_app.exception.BookNotFoundExceptio
 import com.bookstoreapp.springboot.book_store_app.exception.UserNotFoundException;
 import com.bookstoreapp.springboot.book_store_app.mapper.BookMapper;
 import com.bookstoreapp.springboot.book_store_app.model.Book;
+import com.bookstoreapp.springboot.book_store_app.model.CartItem;
 import com.bookstoreapp.springboot.book_store_app.model.User;
 import com.bookstoreapp.springboot.book_store_app.repository.BookRepository;
+import com.bookstoreapp.springboot.book_store_app.repository.CartItemRepository;
+import com.bookstoreapp.springboot.book_store_app.repository.CartRepository;
 import com.bookstoreapp.springboot.book_store_app.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.mapstruct.MappingTarget;
@@ -22,19 +25,25 @@ import java.util.NoSuchElementException;
 public class BookService {
 
     private BookRepository bookRepository;
+
+    private CartItemRepository cartItemRepository;
+
+    private CartRepository cartRepository;
+
     private UserRepository userRepository;
 
     private BookMapper bookMapper;
 
-    public BookService(BookRepository booksRepository, UserRepository userRepository
+    public BookService(BookRepository booksRepository, CartRepository cartRepository,CartItemRepository cartItemRepository, UserRepository userRepository
             ,BookMapper bookMapper) {
 
         this.bookRepository = booksRepository;
+        this.cartItemRepository = cartItemRepository;
+        this.cartRepository = cartRepository;
         this.userRepository = userRepository;
         this.bookMapper = bookMapper;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public List<BookDTO> getBooks(){
 
         var result = bookRepository.findAll()
@@ -50,27 +59,29 @@ public class BookService {
                 .orElseThrow(() -> new BookNotFoundException(id));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     public BookDTO createBook(BookDTO bookDTO)
     {
         Book book = bookRepository.save(bookMapper.toEntity(bookDTO));
         return bookMapper.toDTO(book);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    public BookDTO updateBook(Long id, BookDTO bookDTO){
+    @Transactional
+    public BookDTO updateBook(Long id, BookDTO bookDTO) {
 
-        Book existingBook =  bookRepository.findById(id)
-                        .orElseThrow(() -> new BookNotFoundException(id));
-        bookMapper.updateBookFromDTO(bookDTO, existingBook);
-        return bookMapper.toDTO(bookRepository.save(existingBook));
-    }
+    Book existingBook = bookRepository.findById(id)
+            .orElseThrow(() -> new BookNotFoundException(id));
+
+    bookMapper.updateBookFromDTO(bookDTO, existingBook);
+
+    return bookMapper.toDTO(existingBook);
+}
 
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
     public void deleteBook(Long id){
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new BookNotFoundException(id));
+
+        cartItemRepository.deleteAllByBookId(id);
 
         // Αφαίρεση από τα favorites όλων των χρηστών
         userRepository.removeBookFromAllFavorites(id);

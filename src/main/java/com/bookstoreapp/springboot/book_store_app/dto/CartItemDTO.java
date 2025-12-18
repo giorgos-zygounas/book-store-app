@@ -5,16 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserMeDTO {
-
-    private String firstName;
-    private String lastName;
-    private String username;
-    private String email;
+public class CartItemDTO {
+    private Long bookId;
+    private String title;
+    private BigDecimal price;
+    private int quantity;
 }

@@ -29,20 +29,43 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authReq ->{
                     authReq
+                            // public
                             .requestMatchers("/users/login", "/users/register").permitAll()
-                            .requestMatchers("/users/me").hasRole("USER")
-                            .requestMatchers("/users/me/favorites").hasRole("USER")
+
+                            // USER endpoints (specific FIRST)
+                            .requestMatchers(HttpMethod.GET, "/users/me").hasRole("USER")
                             .requestMatchers("/users/me/favorites/**").hasRole("USER")
-                            // Μόνο ADMIN για λίστα και details
-                            .requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("ADMIN")
+                            .requestMatchers("/users/me/carts/**").hasRole("USER")
+                            .requestMatchers("/users/me/orders/**").hasRole("USER")
+
+                            // ADMIN endpoints (generic LAST)
                             .requestMatchers(HttpMethod.GET, "/users/**").hasRole("ADMIN")
-                            .requestMatchers(HttpMethod.GET, "/books").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("ADMIN")
                             .requestMatchers(HttpMethod.POST, "/books").hasRole("ADMIN")
                             .requestMatchers(HttpMethod.PUT, "/books").hasRole("ADMIN")
                             .requestMatchers(HttpMethod.DELETE, "/books/**").hasRole("ADMIN")
-                            .requestMatchers(HttpMethod.GET,"/users/me/favorites").hasRole("USER")
-                            .requestMatchers(HttpMethod.POST,"/users/me/favorites/**").hasRole("USER")
+
                             .anyRequest().authenticated();
+//                            .requestMatchers("/users/me/favorites").hasRole("USER")
+//                            .requestMatchers(HttpMethod.GET,"/users/me").hasRole("USER")
+//                            .requestMatchers("/users/login", "/users/register").permitAll()
+//                            .requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("ADMIN")
+//                            .requestMatchers(HttpMethod.GET, "/users/**").hasRole("ADMIN")
+//                            .requestMatchers(HttpMethod.GET, "/books").hasRole("ADMIN")
+//                            .requestMatchers(HttpMethod.POST, "/books").hasRole("ADMIN")
+//                            .requestMatchers(HttpMethod.PUT, "/books").hasRole("ADMIN")
+//                            .requestMatchers(HttpMethod.DELETE, "/books/**").hasRole("ADMIN")
+//
+//                            .requestMatchers(HttpMethod.GET,"/users/me").hasRole("USER")
+//                            .requestMatchers("/users/me").hasRole("USER")
+//                            .requestMatchers("/users/me/favorites/**").hasRole("USER")
+//                            .requestMatchers("/users/me/carts").hasRole("USER")
+//                            .requestMatchers("/users/me/carts/**").hasRole("USER")
+//                            .requestMatchers("/users/me/orders").hasRole("USER")
+//                            .requestMatchers("/users/me/orders/**").hasRole("USER")
+//
+//
+//                            .anyRequest().authenticated();
                 })
                 .httpBasic(Customizer.withDefaults())
                 .build();
