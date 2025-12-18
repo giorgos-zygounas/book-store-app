@@ -1,5 +1,5 @@
 📚 Online Bookstore API
-
+We aim to develop an application that simulates an online bookstore. Our primary goal is to provide a simple and intuitive experience, making it easy for users to purchase the books they like. The application will allow users to perform three main actions: add books to their shopping cart, mark books as favorites, and place orders.
 A RESTful Online Bookstore API built with Spring Boot, featuring user authentication, role-based authorization, shopping cart, favorites, and order management.
 - Features
   - Users
