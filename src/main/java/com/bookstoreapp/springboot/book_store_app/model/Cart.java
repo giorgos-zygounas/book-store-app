@@ -26,6 +26,7 @@ public class Cart {
     private LocalDateTime createdAt;
 
     @OneToOne
+    @JoinColumn(name = "user_id") // Αυτό δημιουργεί τη στήλη στη βάση
     private User user;
 
     @OneToMany(mappedBy = "cart",  cascade = CascadeType.ALL, orphanRemoval = true)

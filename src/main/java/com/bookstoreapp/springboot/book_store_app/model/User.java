@@ -61,8 +61,8 @@ public class User {
     )
     private List<Book> favoriteBooks = new ArrayList<>();
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "cart_id")
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    //@JoinColumn(name = "cart_id")
     private Cart cart;
 
     public void setCreatedAt(LocalDateTime createdAt) {

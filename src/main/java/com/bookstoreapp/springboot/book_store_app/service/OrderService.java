@@ -40,10 +40,12 @@ public class OrderService {
     }
 
     public List<AdminOrderDTO> getAllOrdersForAdmin() {
+
         return orderRepository.findAll()
                 .stream()
                 .map(adminOrderMapper::toDTO)
                 .toList();
+
     }
 
     public OrderDTO placeOrder(String username){
@@ -87,7 +89,6 @@ public class OrderService {
                 .orElseThrow(() -> new UserNotFoundException(username));
 
         List<Order> orders = orderRepository.findAllByUserId(user.getId());
-
 
         return orders.stream().map(orderMapper::toDTO).collect(Collectors.toList());
     }
