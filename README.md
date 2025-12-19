@@ -74,3 +74,5 @@ Maven
 OpenAPI 3 (Swagger)
 
 JUnit 5 & Mockito
+
+MapStruct
