@@ -6,10 +6,7 @@ import com.bookstoreapp.springboot.book_store_app.exception.BookNotFoundExceptio
 import com.bookstoreapp.springboot.book_store_app.exception.UserNotFoundException;
 import com.bookstoreapp.springboot.book_store_app.mapper.BookMapper;
 import com.bookstoreapp.springboot.book_store_app.mapper.CartMapper;
-import com.bookstoreapp.springboot.book_store_app.model.Book;
-import com.bookstoreapp.springboot.book_store_app.model.Cart;
-import com.bookstoreapp.springboot.book_store_app.model.CartItem;
-import com.bookstoreapp.springboot.book_store_app.model.User;
+import com.bookstoreapp.springboot.book_store_app.model.*;
 import com.bookstoreapp.springboot.book_store_app.repository.BookRepository;
 import com.bookstoreapp.springboot.book_store_app.repository.CartItemRepository;
 import com.bookstoreapp.springboot.book_store_app.repository.CartRepository;
@@ -70,6 +67,10 @@ public class CartService {
 
 		Book book = bookRepository.findById(bookId)
 				.orElseThrow(() -> new BookNotFoundException(bookId));
+
+        if (book.getAvailable() == AvailabilityStatus.UNAVAILABLE) {
+            throw new BookUnavailableException();
+        }
 
         Cart cart = user.getCart();
 

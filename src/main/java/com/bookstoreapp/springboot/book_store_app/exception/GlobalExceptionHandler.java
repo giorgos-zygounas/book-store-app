@@ -40,6 +40,12 @@ public class GlobalExceptionHandler {
         Map<String, String> body = Map.of("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
+
+    @ExceptionHandler(BookUnavailableException.class)
+    public ResponseEntity<Map<String, String>> handleBookIsUnavailableException(BookUnavailableException ex) {
+        Map<String, String> body = Map.of("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
 }
 
 
