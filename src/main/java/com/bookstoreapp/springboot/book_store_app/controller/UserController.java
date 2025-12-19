@@ -57,7 +57,7 @@ public class UserController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<String> updateUser(@RequestBody UserMeDTO updateDTO){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        UserAdminDTO updatedUser = userService.updateUser(username, updateDTO);
+        UserMeDTO updatedUser = userService.updateUser(username, updateDTO);
         return ResponseEntity.ok("User details updated successfully");
     }
 

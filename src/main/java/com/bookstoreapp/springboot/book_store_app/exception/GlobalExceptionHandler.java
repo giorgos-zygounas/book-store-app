@@ -46,6 +46,12 @@ public class GlobalExceptionHandler {
         Map<String, String> body = Map.of("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
+
+    @ExceptionHandler(UserHasOrdersException.class)
+    public ResponseEntity<Map<String, String>> handleUserHasOrdersException(UserHasOrdersException ex) {
+        Map<String, String> body = Map.of("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
 }
 
 

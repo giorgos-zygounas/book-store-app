@@ -4,6 +4,7 @@ import com.bookstoreapp.springboot.book_store_app.dto.BookDTO;
 import com.bookstoreapp.springboot.book_store_app.dto.UserAdminDTO;
 import com.bookstoreapp.springboot.book_store_app.dto.UserMeDTO;
 import com.bookstoreapp.springboot.book_store_app.exception.BookNotFoundException;
+import com.bookstoreapp.springboot.book_store_app.exception.UserHasOrdersException;
 import com.bookstoreapp.springboot.book_store_app.exception.UserNotFoundException;
 import com.bookstoreapp.springboot.book_store_app.exception.UsernameAlreadyExistsException;
 import com.bookstoreapp.springboot.book_store_app.mapper.BookMapper;
@@ -13,6 +14,7 @@ import com.bookstoreapp.springboot.book_store_app.model.Book;
 import com.bookstoreapp.springboot.book_store_app.model.Cart;
 import com.bookstoreapp.springboot.book_store_app.model.User;
 import com.bookstoreapp.springboot.book_store_app.repository.BookRepository;
+import com.bookstoreapp.springboot.book_store_app.repository.OrderRepository;
 import com.bookstoreapp.springboot.book_store_app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,6 +32,7 @@ public class UserService implements UserDetailsService {
 
     private UserRepository userRepository;
     private BookRepository bookRepository;
+    private OrderRepository orderRepository;
 
     private UserMapper userMapper;
     private BookMapper bookMapper;
@@ -38,12 +41,13 @@ public class UserService implements UserDetailsService {
     private PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository, UserMapper userMapper
-            , BookMapper bookMapper, BookRepository bookRepository ) {
+            , BookMapper bookMapper, BookRepository bookRepository, OrderRepository orderRepository ) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
 
         this.bookMapper = bookMapper;
         this.bookRepository = bookRepository;
+        this.orderRepository = orderRepository;
     }
 
     public User register(UserMeDTO userDTO) {
@@ -90,6 +94,9 @@ public class UserService implements UserDetailsService {
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
             throw new UserNotFoundException(id);
+        }
+        if (orderRepository.existsByUserId(id)) {
+            throw new UserHasOrdersException();
         }
         User user = userRepository.findById(id)
                 .orElseThrow(()-> new UserNotFoundException(id));
@@ -149,7 +156,7 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public UserAdminDTO updateUser(String username, UserMeDTO updateDTO){
+    public UserMeDTO updateUser(String username, UserMeDTO updateDTO){
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(username));
 
@@ -159,7 +166,7 @@ public class UserService implements UserDetailsService {
         if(updateDTO.getEmail() != null) user.setEmail(updateDTO.getEmail());
 
         User savedUser = userRepository.save(user);
-        return userMapper.toAdminDTO(savedUser);
+        return userMapper.toUserMeDTO(savedUser);
     }
 
 }

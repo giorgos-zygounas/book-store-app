@@ -3,6 +3,7 @@ package com.bookstoreapp.springboot.book_store_app.service;
 import com.bookstoreapp.springboot.book_store_app.dto.CartDTO;
 import com.bookstoreapp.springboot.book_store_app.dto.CartItemDTO;
 import com.bookstoreapp.springboot.book_store_app.exception.BookNotFoundException;
+import com.bookstoreapp.springboot.book_store_app.exception.BookUnavailableException;
 import com.bookstoreapp.springboot.book_store_app.exception.UserNotFoundException;
 import com.bookstoreapp.springboot.book_store_app.mapper.BookMapper;
 import com.bookstoreapp.springboot.book_store_app.mapper.CartMapper;
@@ -60,13 +61,13 @@ public class CartService {
 
         return cartDTO;
 	}
+    public CartDTO addToCart(String username, Long bookId, int quantity) {
 
-	public CartDTO addToCart(String username, Long bookId, int quantity){
-		User user = userRepository.findByUsername(username)
-				.orElseThrow(() -> new UserNotFoundException(username));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(username));
 
-		Book book = bookRepository.findById(bookId)
-				.orElseThrow(() -> new BookNotFoundException(bookId));
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new BookNotFoundException(bookId));
 
         if (book.getAvailable() == AvailabilityStatus.UNAVAILABLE) {
             throw new BookUnavailableException();
@@ -74,17 +75,51 @@ public class CartService {
 
         Cart cart = user.getCart();
 
-        CartItem cartItem = new CartItem();
-        cartItem.setBook(book);
-        cartItem.setCart(cart);
-        cartItem.setQuantity(quantity);
+        CartItem cartItem = cartItemRepository
+                .findCartItemByCartIdAndBookId(cart.getId(), bookId)
+                .orElse(null);
 
-        cart.addCartItem(cartItem);
+        if (cartItem != null) {
 
-        cartRepository.save(cart);
+            cartItem.setQuantity(cartItem.getQuantity() + quantity);
+        } else {
 
-        return cartMapper.toDTO(cart);
-	}
+            cartItem = new CartItem();
+            cartItem.setBook(book);
+            cartItem.setCart(cart);
+            cartItem.setQuantity(quantity);
+
+            cart.addCartItem(cartItem);
+        }
+
+        Cart savedCart = cartRepository.save(cart);
+        return cartMapper.toDTO(savedCart);
+    }
+
+//	public CartDTO addToCart(String username, Long bookId, int quantity){
+//		User user = userRepository.findByUsername(username)
+//				.orElseThrow(() -> new UserNotFoundException(username));
+//
+//		Book book = bookRepository.findById(bookId)
+//				.orElseThrow(() -> new BookNotFoundException(bookId));
+//
+//        if (book.getAvailable() == AvailabilityStatus.UNAVAILABLE) {
+//            throw new BookUnavailableException();
+//        }
+//
+//        Cart cart = user.getCart();
+//
+//        CartItem cartItem = new CartItem();
+//        cartItem.setBook(book);
+//        cartItem.setCart(cart);
+//        cartItem.setQuantity(quantity);
+//
+//        cart.addCartItem(cartItem);
+//
+//        cartRepository.save(cart);
+//
+//        return cartMapper.toDTO(cart);
+//	}
 
 	public CartDTO removeFromCart(String username, Long bookId) {
         User user = userRepository.findByUsername(username)
